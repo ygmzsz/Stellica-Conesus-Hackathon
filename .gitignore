@@ -18,6 +18,10 @@ yarn-error.log*
 
 # env files
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -25,3 +29,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# discord.js specific
+/cache
+/sessions
+
+# dotenv (already covered by .env*)
+# .env
+# .env.local
+# .env.development
+# .env.development.local
+# .env.test
+# .env.test.local
+# .env.production
+# .env.production.local

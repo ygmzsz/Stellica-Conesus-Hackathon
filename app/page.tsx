@@ -1,8 +1,9 @@
 import { CryptoCard } from "@/components/crypto-card"
 import { MarketOverview } from "@/components/market-overview"
 import { RecentTransactions } from "@/components/recent-transactions"
-import { TradingView } from "@/components/trading-view"
+import { LiveChart } from "@/components/live-chart"
 import { Button } from "@/components/ui/button"
+import { RealTimePrice } from "@/components/real-time-price"
 import Link from "next/link"
 
 export default function Home() {
@@ -15,28 +16,28 @@ export default function Home() {
           symbol="BTC"
           price={65432.18}
           change={2.34}
-          icon="/placeholder.svg?height=40&width=40"
+          icon="https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
         />
         <CryptoCard
           name="Ethereum"
           symbol="ETH"
           price={3521.67}
           change={-1.24}
-          icon="/placeholder.svg?height=40&width=40"
+          icon="https://assets.coingecko.com/coins/images/279/large/ethereum.png"
         />
         <CryptoCard
           name="Solana"
           symbol="SOL"
           price={178.92}
           change={5.67}
-          icon="/placeholder.svg?height=40&width=40"
+          icon="https://assets.coingecko.com/coins/images/4128/large/solana.png"
         />
         <CryptoCard
           name="Cardano"
           symbol="ADA"
           price={0.58}
           change={-0.32}
-          icon="/placeholder.svg?height=40&width=40"
+          icon="https://assets.coingecko.com/coins/images/975/large/cardano.png"
         />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -44,13 +45,10 @@ export default function Home() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">BTC/USDT</h2>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-green-500 dark:text-green-400">$65,432.18</span>
-              <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-xs font-medium text-green-500 dark:text-green-400">
-                +2.34%
-              </span>
+              <RealTimePrice cryptoId="bitcoin" />
             </div>
           </div>
-          <TradingView />
+          <LiveChart cryptoId="bitcoin" height={400} />
           <div className="mt-4 grid grid-cols-2 gap-4">
             <Button className="w-full bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
               Buy

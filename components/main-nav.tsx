@@ -12,6 +12,9 @@ export function MainNav() {
     { href: "/exchange", label: "Exchange" },
     { href: "/wallet", label: "Wallet" },
     { href: "/markets", label: "Markets" },
+    { href: "/thresholds", label: "Thresholds" },
+    { href: "/setup-wallet", label: "Setup Stellar" },
+    { href: "/settings/discord", label: "Discord" },
   ]
 
   return (

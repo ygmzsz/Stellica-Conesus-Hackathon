@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MainNav } from "@/components/main-nav"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function SiteHeader() {
   return (
@@ -32,10 +40,36 @@ export function SiteHeader() {
             <span className="sr-only">Notifications</span>
           </Button>
           <ThemeToggle />
-          <Avatar className="h-8 w-8 border">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8 border">
+                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/profile">Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/wallet">Wallet</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">Settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/login">Sign in</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/register">Create account</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

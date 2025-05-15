@@ -9,8 +9,7 @@ import { fetchCryptoPrices } from "@/lib/crypto-api"
 // Verify the request is coming from our Discord bot
 const verifyDiscordRequest = (req: NextRequest) => {
   const authHeader = req.headers.get("authorization")
-  // In a real app, you would verify the token against an environment variable
-  const validToken = process.env.DISCORD_BOT_SECRET || "your-secret-token"
+  const validToken = process.env.DISCORD_BOT_SECRET
 
   return authHeader === `Bearer ${validToken}`
 }

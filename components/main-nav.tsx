@@ -3,19 +3,29 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth"
 
 export function MainNav() {
   const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
 
-  const navItems = [
-    { href: "/", label: "Dashboard" },
+  // Public navigation items
+  const publicNavItems = [
+    { href: "/markets", label: "Markets" },
+    { href: "/about", label: "About" },
+    { href: "/features", label: "Features" },
+  ]
+
+  // Authenticated navigation items
+  const authNavItems = [
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/exchange", label: "Exchange" },
     { href: "/wallet", label: "Wallet" },
     { href: "/markets", label: "Markets" },
     { href: "/thresholds", label: "Thresholds" },
-    { href: "/setup-wallet", label: "Setup Stellar" },
-    { href: "/settings/discord", label: "Discord" },
   ]
+
+  const navItems = isAuthenticated ? authNavItems : publicNavItems
 
   return (
     <nav className="hidden md:flex md:items-center md:space-x-6">

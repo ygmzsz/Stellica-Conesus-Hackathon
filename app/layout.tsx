@@ -10,8 +10,8 @@ import { CryptoDataProvider } from "@/components/crypto-data-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Stellar Crypto Exchange",
-  description: "Buy, sell, and exchange cryptocurrencies on the Stellar blockchain",
+  title: "Stellica - Next-Gen Crypto Exchange",
+  description: "Trade cryptocurrencies on the Stellar blockchain with Stellica",
     generator: 'v0.dev'
 }
 
@@ -23,10 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <CryptoDataProvider>
-              <div className="relative flex min-h-screen flex-col">
+              <div className="relative flex min-h-screen flex-col bg-[#121212] text-white">
                 <SiteHeader />
                 <div className="flex-1">{children}</div>
               </div>

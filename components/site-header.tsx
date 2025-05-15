@@ -1,6 +1,7 @@
+"use client"
+
 import Link from "next/link"
 import { Bell, Search } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,8 +15,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/lib/auth"
 
 export function SiteHeader() {
+  const { user, isAuthenticated } = useAuth()
+
   return (
     <header className="sticky top-0 z-10 border-b bg-background px-4 py-3 md:px-6">
       <div className="flex items-center justify-between">
@@ -26,7 +30,7 @@ export function SiteHeader() {
                 <span className="text-lg font-bold text-white">S</span>
               </div>
             </div>
-            <span className="text-xl font-bold">Stellar</span>
+            <span className="text-xl font-bold">Stellica</span>
           </Link>
           <MainNav />
         </div>
@@ -50,24 +54,34 @@ export function SiteHeader() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/wallet">Wallet</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/login">Sign in</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/register">Create account</Link>
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 bg-[#121212] text-white">
+              {isAuthenticated ? (
+                <>
+                  <DropdownMenuLabel className="font-normal">My Account</DropdownMenuLabel>
+                  <DropdownMenuItem asChild className="focus:bg-gray-800">
+                    <Link href="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="focus:bg-gray-800">
+                    <Link href="/wallet">Wallet</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="focus:bg-gray-800">
+                    <Link href="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <div className="p-2">
+                    <div className="text-lg font-bold text-white">${user?.balance || "29,444.48"}</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem asChild className="focus:bg-gray-800">
+                    <Link href="/login">Sign in</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="focus:bg-gray-800">
+                    <Link href="/register">Create account</Link>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -1,4 +1,4 @@
-// commands/connect-stellar.js
+// bot/commands/connect-stellar.js
 
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { generateSecureToken } = require('../utils/tokens.js');
@@ -15,13 +15,13 @@ module.exports = {
       const token = await generateSecureToken(interaction.user.id);
       const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now
 
-      // 2️⃣ Store it in your DB
+      // 2️⃣ Store it in your verification store
       await storeVerificationRequest(interaction.user.id, token, expiresAt);
 
-      // 3️⃣ Build the verification URL
-      const verificationUrl = `https://stellar-exchange.com/auth/discord?token=${token}`;
+      // 3️⃣ Build the verification URL (replace with your actual web URL)
+      const verificationUrl = `https://your-domain.com/auth/discord?token=${token}`;
 
-      // 4️⃣ Send an ephemeral reply with a “Connect Account” button
+      // 4️⃣ Prepare the embed and button
       const embed = new EmbedBuilder()
         .setTitle('🔗 Connect Your Stellar Account')
         .setDescription('Click the button below to securely link your Discord account to Stellar. This link will expire in 1 hour.')
@@ -34,18 +34,11 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(button);
 
-      await interaction.reply({
-        embeds: [embed],
-        components: [row],
-        ephemeral: true
-      });
+      // 5️⃣ Send the ephemeral reply with the link
+      await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
     } catch (err) {
       console.error('Error in /connect-stellar:', err);
-      await interaction.reply({
-        content: '❌ Oops—something went wrong while generating your link. Please try again later.',
-        ephemeral: true
-      });
+      await interaction.reply({ content: '❌ Something went wrong creating your link. Try again later.', ephemeral: true });
     }
   }
 };
-// This command allows users to link their Discord account to their Stellar account.

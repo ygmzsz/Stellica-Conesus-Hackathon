@@ -1,33 +1,27 @@
-const isAuthenticated = require('../middleware/auth.js');
-const { generateSecureToken } = require('../utils/tokens.js');
+// bot/utils/linkGuard.js
+const isAuthenticated     = require('../middleware/auth.js');
+const { generateSecureToken } = require('./tokens.js');
 
 module.exports = async function requireLink(interaction) {
-  // 1) check if they’re already linked
-  const linked = await isAuthenticated(interaction.user.id);
-  if (linked) return true;
+  // 1) If they’re already linked, let them through
+  if (await isAuthenticated(interaction.user.id)) return true;
 
-  // 2) not linked → generate a new one-time token + URL
+  // 2) Otherwise—generate a fresh one-time token and URL
   const token = await generateSecureToken(interaction.user.id);
-  const url = `https://stellar-exchange.com/auth/discord?token=${token}`;
+  const url   = `https://your-domain.com/auth/discord?token=${token}`;
 
-  // 3) reply with an ephemeral connect button
-  await interaction.reply({
-    content: `🔗 You need to connect your Stellar account first!`,
-    components: [
-      {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 5,          // Link button
-            label: 'Connect Account',
-            url
-          }
-        ]
-      }
-    ],
-    ephemeral: true
-  });
+  // 3) Send them the same “Connect Account” button
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+  const embed = new EmbedBuilder()
+    .setTitle('🔗 Link Your Stellar Account')
+    .setDescription('You need to connect your Stellar account first. Click below:')
+    .setColor(0x9c59b6);
+  const button = new ButtonBuilder()
+    .setLabel('Connect Account')
+    .setStyle(ButtonStyle.Link)
+    .setURL(url);
+  const row = new ActionRowBuilder().addComponents(button);
 
+  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
   return false;
 };

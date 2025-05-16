@@ -13,6 +13,7 @@ export interface User {
   hasBiometricEnabled: boolean
   discordId?: string | null
   discordUsername?: string | null
+  balance?: number
 }
 
 interface AuthContextType {
@@ -21,10 +22,13 @@ interface AuthContextType {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<{ error: Error | null }>
   loginWithGoogle: () => Promise<{ error: Error | null }>
+  loginWithDiscord: () => Promise<{ error: Error | null }>
   logout: () => Promise<void>
   register: (email: string, password: string, name: string) => Promise<{ error: Error | null }>
   updateProfile: (data: Partial<User>) => Promise<{ error: Error | null }>
   linkDiscord: (discordId: string, discordUsername: string) => Promise<{ error: Error | null }>
+  setupBiometric: () => Promise<{ qrCode: string; error: Error | null }>
+  verifyBiometric: (token: string) => Promise<{ error: Error | null }>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -33,10 +37,13 @@ export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   login: async () => ({ error: null }),
   loginWithGoogle: async () => ({ error: null }),
+  loginWithDiscord: async () => ({ error: null }),
   logout: async () => {},
   register: async () => ({ error: null }),
   updateProfile: async () => ({ error: null }),
   linkDiscord: async () => ({ error: null }),
+  setupBiometric: async () => ({ qrCode: "", error: null }),
+  verifyBiometric: async (_token: string) => ({ error: null }),
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -101,15 +108,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return
     }
 
+    // Get user's holdings to calculate balance
+    const { data: holdings, error: holdingsError } = await supabase
+      .from("holdings")
+      .select("*")
+      .eq("user_id", supabaseUser.id)
+
+    let balance = 0
+    if (!holdingsError && holdings) {
+      // In a real app, you would fetch current prices and calculate the actual balance
+      // For now, we'll use a mock value
+      balance = 29444.48
+    }
+
     setUser({
       id: supabaseUser.id,
       name: profile.full_name,
-      email: supabaseUser.email,
+      email: supabaseUser.email || null,
       stellarPublicKey: profile.stellar_public_key,
       hasTwoFactorEnabled: profile.has_two_factor_enabled,
       hasBiometricEnabled: profile.has_biometric_enabled,
       discordId: profile.discord_id,
       discordUsername: profile.discord_username,
+      balance,
     })
   }
 
@@ -143,6 +164,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return { error: null }
     } catch (error) {
       console.error("Google login error:", error)
+      return { error: error as Error }
+    }
+  }
+
+  const loginWithDiscord = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) throw error
+
+      return { error: null }
+    } catch (error) {
+      console.error("Discord login error:", error)
       return { error: error as Error }
     }
   }
@@ -242,6 +281,51 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const setupBiometric = async () => {
+    if (!user) return { qrCode: "", error: new Error("Not authenticated") }
+
+    try {
+      // In a real app, you would generate a QR code with a unique token
+      // For this demo, we'll use a mock QR code
+      const qrCode = "/placeholder.svg?height=200&width=200"
+
+      // Update profile to indicate biometric setup is in progress
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          has_biometric_enabled: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+
+      if (error) throw error
+
+      // Update local user state
+      setUser({
+        ...user,
+        hasBiometricEnabled: true,
+      })
+
+      return { qrCode, error: null }
+    } catch (error) {
+      console.error("Setup biometric error:", error)
+      return { qrCode: "", error: error as Error }
+    }
+  }
+
+  const verifyBiometric = async (token: string) => {
+    if (!user) return { error: new Error("Not authenticated") }
+
+    try {
+      // In a real app, you would verify the token
+      // For this demo, we'll just return success
+      return { error: null }
+    } catch (error) {
+      console.error("Verify biometric error:", error)
+      return { error: error as Error }
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -250,10 +334,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated: !!user,
         login,
         loginWithGoogle,
+        loginWithDiscord,
         logout,
         register,
         updateProfile,
         linkDiscord,
+        setupBiometric,
+        verifyBiometric,
       }}
     >
       {children}

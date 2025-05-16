@@ -1,24 +1,25 @@
 const StellarSdk = require('stellar-sdk');
-require('dotenv').config();
+const server = new StellarSdk.Server('https://horizon.stellar.org');
 
-const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
-const sourceKeypair = StellarSdk.Keypair.fromSecret(process.env.STELLAR_SECRET);
+async function sendPayment(senderSecret, recipientPublic, amount) {
+  const sourceKeypair = StellarSdk.Keypair.fromSecret(senderSecret);
+  const account = await server.loadAccount(sourceKeypair.publicKey());
 
-async function loadAccount() {
-    return await server.loadAccount(sourceKeypair.publicKey());
+  const fee = await server.fetchBaseFee();
+  const transaction = new StellarSdk.TransactionBuilder(account, {
+    fee,
+    networkPassphrase: StellarSdk.Networks.PUBLIC
+  })
+    .addOperation(StellarSdk.Operation.payment({
+      destination: recipientPublic,
+      asset: StellarSdk.Asset.native(),
+      amount: amount.toString()
+    }))
+    .setTimeout(30)
+    .build();
+
+  transaction.sign(sourceKeypair);
+  return await server.submitTransaction(transaction);
 }
 
-function buildTransaction(account) {
-    return new StellarSdk.TransactionBuilder(account, {
-        fee: StellarSdk.BASE_FEE,
-        networkPassphrase: StellarSdk.Networks.TESTNET,
-    });
-}
-
-module.exports = {
-    StellarSdk,
-    server,
-    sourceKeypair,
-    loadAccount,
-    buildTransaction
-};
+module.exports = { sendPayment };

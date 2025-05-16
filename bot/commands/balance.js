@@ -1,20 +1,12 @@
-const { SlashCommandBuilder } = require('discord.js');
-const requireLink = require('../utils/linkGuard.js');
-const { fetchStellarBalanceForDiscordUser } = require('../services/stellar.js');
+const { server, sourceKeypair } = require('../services/stellarService');
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('balance')
-    .setDescription('Show your Stellar wallet balance.'),
-  async execute(interaction) {
-    // guard first
-    if (!await requireLink(interaction)) return;
-
-    // now that we know they're linked, do the real work:
-    const balance = await fetchStellarBalanceForDiscordUser(interaction.user.id);
-    return interaction.reply({
-      content: `💰 Your current balance is ${balance} XLM.`,
-      ephemeral: true
-    });
-  }
+module.exports = async (message) => {
+    try {
+        const account = await server.loadAccount(sourceKeypair.publicKey());
+        const balances = account.balances.map(b => \`\${b.asset_type === 'native' ? 'XLM' : b.asset_code}: \${b.balance}\`).join('\n');
+        message.reply(\`Wallet Balances:\n\${balances}\`);
+    } catch (e) {
+        console.error(e);
+        message.reply('Failed to fetch balances.');
+    }
 };

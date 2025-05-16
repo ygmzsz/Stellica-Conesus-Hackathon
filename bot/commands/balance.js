@@ -1,20 +1,20 @@
 const { SlashCommandBuilder } = require('discord.js');
-var isUserSignedIn = true; // This is a placeholder. Replace with actual logic to check if the user is signed in.
-module.exports = {
-	data: new SlashCommandBuilder()
-		.setName('balance')
-		.setDescription('Provides information about the user.'),
-	async execute(interaction) {
-		// interaction.user is the object representing the User who ran the command
-		// interaction.member is the GuildMember object, which represents the user in the specific guild
+const requireLink = require('../utils/linkGuard.js');
+const { fetchStellarBalanceForDiscordUser } = require('../services/stellar.js');
 
-        if (!isUserSignedIn === false) {
-            await interaction.reply('❌ You need to sign in first. Use the `/connect` command.');
-            return;
-        }
-        else if (isUserSignedIn === true) {
-            await interaction.reply('✅ You are signed in.');
-        }
-		await interaction.reply(`This command was run by ${interaction.user.username}, who joined on ${interaction.member.joinedAt}.`);
-	},
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('balance')
+    .setDescription('Show your Stellar wallet balance.'),
+  async execute(interaction) {
+    // guard first
+    if (!await requireLink(interaction)) return;
+
+    // now that we know they're linked, do the real work:
+    const balance = await fetchStellarBalanceForDiscordUser(interaction.user.id);
+    return interaction.reply({
+      content: `💰 Your current balance is ${balance} XLM.`,
+      ephemeral: true
+    });
+  }
 };

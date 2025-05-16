@@ -1,35 +1,29 @@
-import { server } from '@/lib/stellar'; // Adjust path if needed
+import StellarSdk from 'stellar-sdk';
 
-interface BalanceInfo {
-  asset_type: string;
-  asset_code?: string;
-  asset_issuer?: string;
-  balance: string;
-}
+const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
 
-export async function getAccountBalance(publicKey: string) {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const publicKey = searchParams.get('publicKey');
+    if (!publicKey) {
+      return new Response(JSON.stringify({ error: 'Missing publicKey' }), { status: 400 });
+    }
+
     const account = await server.loadAccount(publicKey);
 
-    const balances = account.balances.map((balance: BalanceInfo) => {
-      if (balance.asset_type === 'native') {
-        return {
-          asset: 'XLM',
-          balance: balance.balance,
-          asset_type: balance.asset_type,
-        };
-      } else {
-        return {
-          asset: `${balance.asset_code}:${balance.asset_issuer}`,
-          balance: balance.balance,
-          asset_type: balance.asset_type,
-        };
-      }
-    });
+    const balances = account.balances.map((bal: { asset_type: string; asset_code?: string; balance: string }) => ({
+      asset: bal.asset_type === 'native' ? 'XLM' : bal.asset_code,
+      balance: bal.balance,
+    }));
 
-    return balances;
-  } catch (error) {
-    console.error('Error getting account balance:', error);
-    throw error;
+    return new Response(JSON.stringify(balances), { status: 200 });
+  } catch (error: any) {
+    console.error('Error fetching account balance:', error);
+
+    return new Response(
+      JSON.stringify({ error: error.message || 'Failed to fetch balance' }),
+      { status: 500 }
+    );
   }
 }

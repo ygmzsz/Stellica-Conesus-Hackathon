@@ -9,7 +9,7 @@ const SERVER_URL = TESTNET
   ? 'https://horizon-testnet.stellar.org' 
   : 'https://horizon.stellar.org';
   
-export const server = new StellarSdk.Server(SERVER_URL);
+export const server = new StellarSdk.Horizon.Server(SERVER_URL);
 export const networkPassphrase = TESTNET 
   ? StellarSdk.Networks.TESTNET 
   : StellarSdk.Networks.PUBLIC;

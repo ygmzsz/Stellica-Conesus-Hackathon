@@ -1,5 +1,7 @@
 // This file handles the real-time cryptocurrency data fetching
 
+import { NextApiRequest, NextApiResponse } from "next"
+
 export interface CryptoPrice {
   id: string
   symbol: string
@@ -35,26 +37,21 @@ export interface CryptoHistoricalData {
 }
 
 // Fetch cryptocurrency prices
-export async function fetchCryptoPrices(
-  ids: string[] = ["bitcoin", "ethereum", "solana", "cardano", "ripple", "polkadot", "avalanche", "dogecoin"],
-  currency = "usd",
-): Promise<CryptoPrice[]> {
-  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&ids=${ids.join(
-    ",",
-  )}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h`
-
+// pages/api/crypto-prices.ts
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,...`
   try {
     const response = await fetch(url)
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`)
+      return res.status(response.status).json({ error: 'API error' });
     }
-    return await response.json()
+    const data = await response.json()
+    res.status(200).json(data)
   } catch (error) {
-    console.error("Error fetching crypto prices:", error)
-    // Return mock data if API fails
-    return getMockCryptoPrices()
+    res.status(500).json({ error: 'Failed to fetch' })
   }
 }
+
 
 // Fetch historical data for a specific cryptocurrency
 export async function fetchCryptoHistoricalData(

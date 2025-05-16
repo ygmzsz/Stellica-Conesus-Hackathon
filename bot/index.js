@@ -7,9 +7,13 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js')
 const fs = require('fs')
 const path = require('path')
 
-// 1) Create bot client
-const client = new Client({ intents: [GatewayIntentBits.Guilds] })
-client.commands = new Collection()
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages
+    ]
+});
 
 // 2) Dynamically load all command modules
 const commandsPath = path.join(__dirname, 'commands')
@@ -22,29 +26,17 @@ console.log('Loaded commands:', [...client.commands.keys()])
 
 // 3) When bot is ready
 client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`)
-})
+    console.log(`🟢 Bot logged in as ${client.user.tag}`);
+});
 
-// 4) Handle slash‑commands
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return
+client.on('messageCreate', async (message) => {
+    if (message.author.bot || !message.content.startsWith('!')) return;
+    try {
+        await setupCommands(message);
+    } catch (err) {
+        console.error("⚠️ Command Error:", err);
+        message.reply("❌ Something went wrong while processing your command.");
+    }
+});
 
-  const cmd = client.commands.get(interaction.commandName)
-  if (!cmd) return
-
-  try {
-    await cmd.execute(interaction)
-  } catch (err) {
-    console.error(`Error executing ${interaction.commandName}:`, err)
-    await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true })
-  }
-})
-
-// 5) Login using token from .env
-client.login(process.env.DISCORD_TOKEN)
-    .then(() => {
-        console.log('✅ Bot is online')
-    })
-    .catch(err => {
-        console.error('❌ Failed to login:', err)
-    })
+client.login(process.env.DISCORD_TOKEN);

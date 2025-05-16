@@ -8,8 +8,10 @@ import Link from "next/link"
 
 export default async function Home() {
   // Check if user is authenticated
-  const cookieStore = cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const cookieStore = await cookies()
+  const token = cookieStore.get('sb-zvecpbopzlvvrweipheh-auth-token');
+
+  const supabase = createServerComponentClient({ cookies });
 
   const {
     data: { session },

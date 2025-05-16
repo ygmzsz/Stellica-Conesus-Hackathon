@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -23,11 +24,42 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate registration process
-    setTimeout(() => {
+    const name = (document.getElementById("name") as HTMLInputElement).value
+    const email = (document.getElementById("email") as HTMLInputElement).value
+    const password = (document.getElementById("password") as HTMLInputElement).value
+    const confirmPassword = (document.getElementById("confirmPassword") as HTMLInputElement).value
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match")
       setIsLoading(false)
-      setShowTwoFactorSetup(true)
-    }, 1500)
+      return
+    }
+
+    const supabase = getSupabaseBrowserClient()
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          fullName: name,
+        },
+      },
+    })
+
+    if (error) {
+      alert(error.message)
+      setIsLoading(false)
+      return
+    }
+
+    setShowTwoFactorSetup(true)
+    setIsLoading(false)
+    // // Simulate registration process
+    // setTimeout(() => {
+    //   setIsLoading(false)
+    //   setShowTwoFactorSetup(true)
+    // }, 1500)
   }
 
   const handleTwoFactorSetupComplete = () => {

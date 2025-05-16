@@ -1,3 +1,4 @@
+
 // example: bot/commands/balance.js
 const { SlashCommandBuilder } = require('discord.js');
 const requireLink = require('../utils/linkGuard.js');
@@ -15,4 +16,4 @@ module.exports = {
     const bal = await fetchStellarBalanceForDiscordUser(interaction.user.id);
     return interaction.reply({ content: `💰 Balance: ${bal} XLM`, ephemeral: true });
   }
-};
+}

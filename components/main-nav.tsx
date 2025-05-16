@@ -14,6 +14,7 @@ export function MainNav() {
     { href: "/markets", label: "Markets" },
     { href: "/about", label: "About" },
     { href: "/features", label: "Features" },
+    { href: "/stellarDemo", label: "Stellar Demo" },
   ]
 
   // Authenticated navigation items

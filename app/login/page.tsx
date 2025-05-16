@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -15,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { TwoFactorSetup } from "@/components/two-factor-setup"
 import { BiometricAuth } from "@/components/biometric-auth"
 import { GoogleLogin } from "@/components/google-login"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "../../lib/auth"
 import { BiometricQRModal } from "@/components/biometric-qr-modal"
 
 export default function LoginPage() {
@@ -28,24 +29,53 @@ export default function LoginPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
+
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   setIsLoading(true)
+
+  //   try {
+  //     const { error } = await login(email, password)
+  //     if (error) throw error
+
+  //     // In a real app, the server would tell us if 2FA is required
+  //     // For demo purposes, we'll just show it
+  //     setShowTwoFactor(true)
+  //   } catch (error) {
+  //     console.error("Login error:", error)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("Login started")
     setIsLoading(true)
+    setErrorMessage("")
 
-    try {
-      const { error } = await login(email, password)
-      if (error) throw error
+    const supabase = getSupabaseBrowserClient()
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-      // In a real app, the server would tell us if 2FA is required
-      // For demo purposes, we'll just show it
-      setShowTwoFactor(true)
-    } catch (error) {
-      console.error("Login error:", error)
-    } finally {
+    if (error) {
+      setErrorMessage(error.message)
+      console.log(error.message)
       setIsLoading(false)
+      return
     }
+
+    // On success, redirect or update UI
+    router.push("/dashboard")
+    setIsLoading(false)
   }
+
 
   const handleTwoFactorVerified = () => {
     router.push("/dashboard")
@@ -118,7 +148,7 @@ export default function LoginPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <GoogleLogin onLogin={handleGoogleLogin} isLoading={isLoading} />
+          <GoogleLogin isLoading={isLoading} />
 
           <Button variant="outline" type="button" disabled={isLoading} className="w-full" onClick={handleDiscordLogin}>
             {isLoading ? (

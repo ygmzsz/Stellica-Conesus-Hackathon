@@ -1,4 +1,6 @@
 // lib/stellar.ts
+//const StellarSdk = require('stellar-sdk');
+//import { Server, Networks } from 'stellar-sdk';
 import StellarSdk from 'stellar-sdk';
 
 // Network configuration

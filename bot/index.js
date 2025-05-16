@@ -1,5 +1,8 @@
 // index.js
-require('dotenv').config()
+require('dotenv').config({ path: __dirname + '/.env' });
+console.log('🔑 DISCORD_TOKEN:', process.env.DISCORD_TOKEN);
+console.log('🔑 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID);
+console.log('🔑 DISCORD_GUILD_ID:', process.env.DISCORD_GUILD_ID);
 const { Client, GatewayIntentBits, Collection } = require('discord.js')
 const fs = require('fs')
 const path = require('path')
@@ -15,6 +18,7 @@ for (const file of fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'))) 
   // each command file should export { data: SlashCommandBuilder, execute(interaction) }
   client.commands.set(command.data.name, command)
 }
+console.log('Loaded commands:', [...client.commands.keys()])
 
 // 3) When bot is ready
 client.once('ready', () => {

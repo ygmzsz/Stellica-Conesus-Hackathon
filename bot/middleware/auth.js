@@ -1,6 +1,7 @@
-// middleware/auth.js
+// bot/middleware/auth.js
+const { getAccountLink } = require('../services/linkStore.js');
+
 module.exports = async function isAuthenticated(discordUserId) {
-  // look up in your DB whether this user has linked a Stellar account
-  const link = await getAccountLink(discordUserId);
-  return Boolean(link);
+  // if there’s a stored link, return true
+  return Boolean(await getAccountLink(discordUserId));
 };

@@ -1,3 +1,4 @@
+// example: bot/commands/balance.js
 const { SlashCommandBuilder } = require('discord.js');
 const requireLink = require('../utils/linkGuard.js');
 const { fetchStellarBalanceForDiscordUser } = require('../services/stellar.js');
@@ -5,16 +6,13 @@ const { fetchStellarBalanceForDiscordUser } = require('../services/stellar.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('balance')
-    .setDescription('Show your Stellar wallet balance.'),
+    .setDescription('Show your Stellar balance.'),
   async execute(interaction) {
-    // guard first
+    // ← GUARD HERE
     if (!await requireLink(interaction)) return;
 
-    // now that we know they're linked, do the real work:
-    const balance = await fetchStellarBalanceForDiscordUser(interaction.user.id);
-    return interaction.reply({
-      content: `💰 Your current balance is ${balance} XLM.`,
-      ephemeral: true
-    });
+    // If they are linked, do the real work:
+    const bal = await fetchStellarBalanceForDiscordUser(interaction.user.id);
+    return interaction.reply({ content: `💰 Balance: ${bal} XLM`, ephemeral: true });
   }
 };

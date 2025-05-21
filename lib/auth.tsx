@@ -55,9 +55,18 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
   const supabase = getSupabaseBrowserClient()
 
+  // Handle client-side mounting to prevent hydration mismatches
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    // Only run this after client-side mount to prevent hydration issues
+    if (!isMounted) return;
+    
     // Check if user is logged in
     const checkAuth = async () => {
       try {
@@ -97,9 +106,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [isMounted])
 
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
+    if (!isMounted) return; // Only run on client side
+    
     const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", supabaseUser.id).single()
 
     if (error) {
@@ -116,8 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     let balance = 0
     if (!holdingsError && holdings) {
-      // In a real app, you would fetch current prices and calculate the actual balance
-      // For now, we'll use a mock value
+      // Mock value for balance
       balance = 29444.48
     }
 

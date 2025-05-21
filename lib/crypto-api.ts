@@ -1,6 +1,6 @@
 // This file handles the real-time cryptocurrency data fetching
 
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextApiRequest, NextApiResponse } from "next/types"
 
 export interface CryptoPrice {
   id: string
@@ -323,5 +323,66 @@ function getMockHistoricalData(): CryptoHistoricalData {
     prices,
     market_caps,
     total_volumes,
+  }
+}
+
+// Add this export function
+export async function fetchCryptoPrices(): Promise<CryptoPrice[]> {
+  console.log('Attempting to fetch crypto prices from API...')
+  
+  try {
+    // Always attempt to fetch real data regardless of environment
+    const baseUrl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&sparkline=false&ids=bitcoin,ethereum,solana,cardano,ripple,polkadot,avalanche,dogecoin'
+    
+    // Add API key if it exists in environment variables
+    const apiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY
+    const url = apiKey ? `${baseUrl}&x_cg_api_key=${apiKey}` : baseUrl
+    
+    console.log('Fetching crypto prices from CoinGecko API...')
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // Increased timeout
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: apiKey ? { 'x-cg-api-key': apiKey } : {}
+    })
+    
+    clearTimeout(timeoutId)
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('Successfully fetched real crypto prices')
+      
+      // Validate the data
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(crypto => ({
+          ...crypto,
+          current_price: typeof crypto.current_price === 'number' ? crypto.current_price : 0,
+          price_change_percentage_24h: typeof crypto.price_change_percentage_24h === 'number' ? 
+            crypto.price_change_percentage_24h : 0,
+          market_cap: typeof crypto.market_cap === 'number' ? crypto.market_cap : 0,
+          total_volume: typeof crypto.total_volume === 'number' ? crypto.total_volume : 0,
+        }));
+      } else {
+        throw new Error('Invalid data format received from API');
+      }
+    } else {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error fetching crypto prices:", error)
+    console.log('Falling back to mock data')
+    
+    // Get fresh mock data with current timestamp
+    const mockData = getMockCryptoPrices()
+    
+    // Update the last_updated field to current time for all mock data items
+    const currentTime = new Date().toISOString()
+    return mockData.map(crypto => ({
+      ...crypto,
+      last_updated: currentTime
+    }))
   }
 }

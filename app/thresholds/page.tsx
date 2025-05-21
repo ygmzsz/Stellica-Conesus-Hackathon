@@ -162,7 +162,8 @@ export default function ThresholdsPage() {
                 <Label htmlFor="price">Target Price (USD)</Label>
                 <Input
                   id="price"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={newRule.price || ""}
                   onChange={(e) => setNewRule({ ...newRule, price: Number.parseFloat(e.target.value) || 0 })}
@@ -174,7 +175,8 @@ export default function ThresholdsPage() {
               <Label htmlFor="amount">Amount to {newRule.type}</Label>
               <Input
                 id="amount"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={newRule.amount || ""}
                 onChange={(e) => setNewRule({ ...newRule, amount: Number.parseFloat(e.target.value) || 0 })}

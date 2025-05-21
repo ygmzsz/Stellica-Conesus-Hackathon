@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,6 +12,25 @@ import { OrderBook } from "@/components/order-book"
 import { MarketTrades } from "@/components/market-trades"
 
 export default function ExchangePage() {
+  const [isClient, setIsClient] = useState(false)
+  const [buyAmount, setBuyAmount] = useState("")
+  const [sellAmount, setSellAmount] = useState("")
+  const [convertAmount, setConvertAmount] = useState("")
+  
+  // Enable client-side rendering
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
+  if (!isClient) {
+    return (
+      <main className="flex-1 p-4 md:p-6">
+        <h1 className="mb-6 text-2xl font-bold">Exchange</h1>
+        <div className="animate-pulse">Loading...</div>
+      </main>
+    )
+  }
+
   return (
     <main className="flex-1 p-4 md:p-6">
       <h1 className="mb-6 text-2xl font-bold">Exchange</h1>
@@ -85,12 +107,25 @@ export default function ExchangePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="amount">Amount (BTC)</Label>
-                    <Input id="amount" type="number" placeholder="0.00" step="0.001" min="0" />
+                    <Input 
+                      id="buy-amount" 
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00" 
+                      value={buyAmount}
+                      onChange={(e) => setBuyAmount(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="total">Total (USDT)</Label>
-                    <Input id="total" type="number" placeholder="0.00" readOnly />
+                    <Input 
+                      id="buy-total" 
+                      type="text" 
+                      placeholder="0.00" 
+                      readOnly 
+                      value={parseFloat(buyAmount || "0") * 65432.18 || ""}
+                    />
                   </div>
 
                   <Button className="w-full bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
@@ -130,12 +165,25 @@ export default function ExchangePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="amount">Amount (BTC)</Label>
-                    <Input id="amount" type="number" placeholder="0.00" step="0.001" min="0" />
+                    <Input 
+                      id="sell-amount" 
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00" 
+                      value={sellAmount}
+                      onChange={(e) => setSellAmount(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="total">Total (USDT)</Label>
-                    <Input id="total" type="number" placeholder="0.00" readOnly />
+                    <Input 
+                      id="sell-total" 
+                      type="text" 
+                      placeholder="0.00" 
+                      readOnly 
+                      value={parseFloat(sellAmount || "0") * 65432.18 || ""}
+                    />
                   </div>
 
                   <Button className="w-full bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700">
@@ -161,7 +209,14 @@ export default function ExchangePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="fromAmount">Amount</Label>
-                    <Input id="fromAmount" type="number" placeholder="0.00" step="0.001" min="0" />
+                    <Input 
+                      id="fromAmount" 
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00" 
+                      value={convertAmount}
+                      onChange={(e) => setConvertAmount(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -181,7 +236,13 @@ export default function ExchangePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="toAmount">You'll receive</Label>
-                    <Input id="toAmount" type="number" placeholder="0.00" readOnly />
+                    <Input 
+                      id="toAmount" 
+                      type="text" 
+                      placeholder="0.00" 
+                      readOnly 
+                      value={parseFloat(convertAmount || "0") * 65432.18 || ""}
+                    />
                   </div>
 
                   <Button className="w-full">Convert</Button>

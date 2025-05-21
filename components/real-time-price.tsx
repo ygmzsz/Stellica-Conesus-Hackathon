@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowDown, ArrowUp } from "lucide-react"
+import { ArrowDown, ArrowUp, AlertCircle } from "lucide-react"
 import { useCryptoData } from "@/components/crypto-data-provider"
 
 interface RealTimePriceProps {
@@ -11,7 +11,7 @@ interface RealTimePriceProps {
 }
 
 export function RealTimePrice({ cryptoId, showChange = true, className = "" }: RealTimePriceProps) {
-  const { prices, isLoading } = useCryptoData()
+  const { prices, isLoading, error } = useCryptoData()
   const [priceData, setPriceData] = useState<{
     price: number
     change: number
@@ -40,9 +40,28 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
     }
   }, [prices, isLoading, cryptoId])
 
+  if (error) {
+    return (
+      <div className={`flex items-center text-red-500 ${className}`}>
+        <AlertCircle className="mr-2 h-4 w-4" />
+        <span className="text-sm">Error loading price</span>
+      </div>
+    )
+  }
+
   if (isLoading || !priceData) {
     return <div className={`animate-pulse ${className}`}>Loading...</div>
   }
+
+  // Make sure the price is a valid number before formatting
+  const formattedPrice = typeof priceData.price === 'number' ? 
+    priceData.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 
+    "0.00";
+
+  // Make sure the change is a valid number before formatting
+  const formattedChange = typeof priceData.change === 'number' ? 
+    Math.abs(priceData.change).toFixed(2) : 
+    "0.00";
 
   return (
     <div className={className}>
@@ -51,7 +70,7 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
           animate ? (priceData.isPositive ? "text-green-500" : "text-red-500") : ""
         }`}
       >
-        ${priceData.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        ${formattedPrice}
       </span>
       {showChange && (
         <span
@@ -60,7 +79,7 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
           }`}
         >
           {priceData.isPositive ? <ArrowUp className="mr-1 h-3 w-3" /> : <ArrowDown className="mr-1 h-3 w-3" />}
-          {Math.abs(priceData.change).toFixed(2)}%
+          {formattedChange}%
         </span>
       )}
     </div>

@@ -1,32 +1,52 @@
+"use client"
+
 import { ArrowDown, ArrowUp, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useCryptoData } from "@/components/crypto-data-provider"
 
 interface MarketTableProps {
   filter?: "gainers" | "losers" | "volume"
 }
 
 export function MarketTable({ filter }: MarketTableProps) {
-  // Mock data for market table
-  let marketData = [
-    { name: "Bitcoin", symbol: "BTC", price: 65432.18, change: 2.34, volume: "12.5B", marketCap: "1.25T" },
-    { name: "Ethereum", symbol: "ETH", price: 3521.67, change: -1.24, volume: "8.2B", marketCap: "422.6B" },
-    { name: "Solana", symbol: "SOL", price: 178.92, change: 5.67, volume: "3.1B", marketCap: "76.8B" },
-    { name: "Cardano", symbol: "ADA", price: 0.58, change: -0.32, volume: "1.5B", marketCap: "20.5B" },
-    { name: "Ripple", symbol: "XRP", price: 0.62, change: 1.45, volume: "2.3B", marketCap: "33.7B" },
-    { name: "Polkadot", symbol: "DOT", price: 7.84, change: 3.21, volume: "0.9B", marketCap: "10.2B" },
-    { name: "Avalanche", symbol: "AVAX", price: 38.75, change: 4.56, volume: "1.2B", marketCap: "14.3B" },
-    { name: "Dogecoin", symbol: "DOGE", price: 0.12, change: -2.34, volume: "0.8B", marketCap: "16.8B" },
-    { name: "Chainlink", symbol: "LINK", price: 15.32, change: 2.87, volume: "0.7B", marketCap: "8.9B" },
-    { name: "Polygon", symbol: "MATIC", price: 0.78, change: -1.56, volume: "0.6B", marketCap: "7.5B" },
-  ]
+  const { prices, isLoading, error } = useCryptoData()
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div className="flex h-[200px] flex-col items-center justify-center text-red-500">
+        <p>Error loading cryptocurrency data</p>
+        <p className="text-sm">{error}</p>
+      </div>
+    )
+  }
 
   // Apply filters if specified
+  let filteredData = [...prices]
+  
   if (filter === "gainers") {
-    marketData = marketData.filter((crypto) => crypto.change > 0).sort((a, b) => b.change - a.change)
+    filteredData = filteredData.filter((crypto) => (crypto.price_change_percentage_24h || 0) > 0)
+      .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0))
   } else if (filter === "losers") {
-    marketData = marketData.filter((crypto) => crypto.change < 0).sort((a, b) => a.change - b.change)
+    filteredData = filteredData.filter((crypto) => (crypto.price_change_percentage_24h || 0) < 0)
+      .sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0))
   } else if (filter === "volume") {
-    marketData = [...marketData].sort((a, b) => Number.parseFloat(b.volume) - Number.parseFloat(a.volume))
+    filteredData = filteredData.sort((a, b) => (b.total_volume || 0) - (a.total_volume || 0))
+  }
+
+  if (filteredData.length === 0) {
+    return (
+      <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground">
+        <p>No data available</p>
+      </div>
+    );
   }
 
   return (
@@ -44,46 +64,58 @@ export function MarketTable({ filter }: MarketTableProps) {
           </tr>
         </thead>
         <tbody>
-          {marketData.map((crypto, index) => (
-            <tr key={crypto.symbol} className="border-b text-sm hover:bg-muted/50">
-              <td className="py-4 pl-4">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Star className="h-4 w-4 text-muted-foreground" />
-                    <span className="sr-only">Add to favorites</span>
-                  </Button>
-                  <span>{index + 1}</span>
-                </div>
-              </td>
-              <td className="py-4">
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-full bg-muted" />
-                  <div>
-                    <p className="font-medium">{crypto.name}</p>
-                    <p className="text-xs text-muted-foreground">{crypto.symbol}</p>
+          {filteredData.map((crypto, index) => {
+            // Ensure values are numbers
+            const price = typeof crypto.current_price === 'number' ? crypto.current_price : 0;
+            const change = typeof crypto.price_change_percentage_24h === 'number' ? 
+              crypto.price_change_percentage_24h : 0;
+            const volume = typeof crypto.total_volume === 'number' ? crypto.total_volume : 0;
+            const marketCap = typeof crypto.market_cap === 'number' ? crypto.market_cap : 0;
+            const isPositive = change > 0;
+
+            return (
+              <tr key={crypto.id} className="border-b text-sm hover:bg-muted/50">
+                <td className="py-4 pl-4">
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                      <span className="sr-only">Add to favorites</span>
+                    </Button>
+                    <span>{index + 1}</span>
                   </div>
-                </div>
-              </td>
-              <td className="py-4 text-right">
-                ${crypto.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </td>
-              <td className="py-4 text-right">
-                <div
-                  className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${crypto.change > 0 ? "bg-green-500/10 text-green-500 dark:text-green-400" : "bg-red-500/10 text-red-500 dark:text-red-400"}`}
-                >
-                  {crypto.change > 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                  {Math.abs(crypto.change)}%
-                </div>
-              </td>
-              <td className="py-4 text-right">{crypto.volume}</td>
-              <td className="py-4 text-right">{crypto.marketCap}</td>
-              <td className="py-4 text-right pr-4">
-                <Button size="sm" variant="outline">
-                  Trade
-                </Button>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td className="py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-full overflow-hidden">
+                      <img src={crypto.image} alt={crypto.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{crypto.name}</p>
+                      <p className="text-xs text-muted-foreground">{crypto.symbol.toUpperCase()}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 text-right">
+                  ${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td className="py-4 text-right">
+                  <div
+                    className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${isPositive ? "bg-green-500/10 text-green-500 dark:text-green-400" : "bg-red-500/10 text-red-500 dark:text-red-400"}`}
+                  >
+                    {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {Math.abs(change).toFixed(2)}%
+                  </div>
+                </td>
+                <td className="py-4 text-right">${(volume / 1e9).toFixed(1)}B</td>
+                <td className="py-4 text-right">${(marketCap / 1e9).toFixed(1)}B</td>
+                <td className="py-4 text-right pr-4">
+                  <Button size="sm" variant="outline">
+                    Trade
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -19,39 +19,39 @@ const publicRoutes = [
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"]
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  try {
+    const res = NextResponse.next()
+    const supabase = createMiddlewareClient({ req, res })
 
-  // Check if user is authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    // IMPORTANT: Make sure to await the auth.getSession call
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  const isAuthenticated = !!session
-  const path = req.nextUrl.pathname
+    const isAuthenticated = !!session
+    const path = req.nextUrl.pathname
 
-  // If user is on an auth route and is already authenticated, redirect to dashboard
-  if (isAuthenticated && authRoutes.includes(path)) {
-    return NextResponse.redirect(new URL("/dashboard", req.url))
+    // If user is on an auth route and is already authenticated, redirect to dashboard
+    if (isAuthenticated && authRoutes.includes(path)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url))
+    }
+
+    // If user is not authenticated and not on a public route, redirect to login
+    if (!isAuthenticated && !publicRoutes.some((route) => path.startsWith(route))) {
+      return NextResponse.redirect(new URL("/login", req.url))
+    }
+
+    return res
+  } catch (error) {
+    console.error("Middleware error:", error)
+    // On error, allow the request to continue to avoid blocking the user
+    return NextResponse.next()
   }
-
-  // If user is not authenticated and not on a public route, redirect to login
-  if (!isAuthenticated && !publicRoutes.some((route) => path.startsWith(route))) {
-    return NextResponse.redirect(new URL("/login", req.url))
-  }
-
-  return res
 }
 
+// Disable auth checks on static resources
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
   ],
 }

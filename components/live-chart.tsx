@@ -21,24 +21,24 @@ export function LiveChart({ cryptoId = "bitcoin", days = 7, height = 400 }: Live
 
     const fetchData = async () => {
       try {
-        setIsLoading(true)
-        setError(null)
-        const data = await fetchCryptoHistoricalData(cryptoId, days)
-        drawChart(data.prices)
+        setIsLoading(true);
+        setError(null);
+        // Use the improved function with no mock fallback
+        const data = await fetchCryptoHistoricalData(cryptoId, days);
+        drawChart(data.prices);
       } catch (err) {
-        console.error("Error fetching historical data:", err)
-        setError("Failed to load chart data")
+        console.error("Error fetching historical data:", err);
+        setError("Unable to load chart data. Please try again later.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchData()
+    fetchData();
 
-    // Refresh data every 5 minutes
-    const intervalId = setInterval(fetchData, 5 * 60 * 1000)
-
-    return () => clearInterval(intervalId)
+    // Set up interval for refreshing data
+    const intervalId = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
   }, [cryptoId, days, theme])
 
   const drawChart = (priceData: [number, number][]) => {

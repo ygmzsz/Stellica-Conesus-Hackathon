@@ -11,7 +11,7 @@ interface RealTimePriceProps {
 }
 
 export function RealTimePrice({ cryptoId, showChange = true, className = "" }: RealTimePriceProps) {
-  const { prices, isLoading } = useCryptoData()
+  const { prices, isLoading, error } = useCryptoData()
   const [priceData, setPriceData] = useState<{
     price: number
     change: number
@@ -40,8 +40,16 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
     }
   }, [prices, isLoading, cryptoId])
 
-  if (isLoading || !priceData) {
-    return <div className={`animate-pulse ${className}`}>Loading...</div>
+  if (isLoading) {
+    return <div className={`animate-pulse ${className}`}>Loading...</div>;
+  }
+  
+  if (error) {
+    return <div className={`text-red-500 ${className}`}>Price unavailable</div>;
+  }
+
+  if (!priceData) {
+    return <div className={className}>Price unavailable</div>;
   }
 
   return (

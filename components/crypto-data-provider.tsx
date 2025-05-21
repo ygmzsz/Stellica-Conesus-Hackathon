@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { fetchCryptoPrices, type CryptoPrice } from "@/lib/crypto-api"
+import { fetchCryptoPricesRobust, type CryptoPrice } from "@/lib/crypto-api"
 
 interface CryptoDataContextType {
   prices: CryptoPrice[]
@@ -31,14 +31,16 @@ export function CryptoDataProvider({ children, refreshInterval = 60000 }: Crypto
 
   const fetchData = async () => {
     try {
-      setError(null)
-      const data = await fetchCryptoPrices()
-      setPrices(data)
+      setError(null);
+      setIsLoading(true);
+      // Use the robust version that tries multiple APIs
+      const data = await fetchCryptoPricesRobust();
+      setPrices(data);
     } catch (err) {
-      console.error("Error fetching crypto data:", err)
-      setError("Failed to fetch cryptocurrency data. Please try again later.")
+      console.error("Error fetching crypto data:", err);
+      setError("Failed to fetch cryptocurrency data. Please try again later.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

@@ -1,0 +1,112 @@
+import { useCryptoData } from './crypto-data-provider';
+import CryptoPriceCard from './crypto-price-card';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { RefreshCw, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Skeleton } from './ui/skeleton';
+
+export default function CryptoMarketOverview() {
+  const { prices, isLoading, refreshData, error } = useCryptoData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCryptos, setFilteredCryptos] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Set up filtered cryptos when prices change or search query changes
+  useEffect(() => {
+    if (prices) {
+      const filtered = prices.filter(crypto => 
+        crypto.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        crypto.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredCryptos(filtered.slice(0, 12)); // Limit to first 12 for better performance
+    }
+  }, [prices, searchQuery]);
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshData();
+    setTimeout(() => setIsRefreshing(false), 500); // Minimum refresh animation time
+  };
+
+  // Generate loading skeletons
+  const renderSkeletons = () => {
+    return Array(4).fill(0).map((_, index) => (
+      <div key={`skeleton-${index}`} className="col-span-1">
+        <Card>
+          <CardHeader className="pb-2">
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-[150px] w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    ));
+  };
+
+  return (
+    <div className="w-full">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-xl font-bold">Market Overview</div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search cryptocurrencies..."
+              className="pl-8 w-[200px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <Card className="mb-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+          <CardContent className="p-4 text-red-600 dark:text-red-400">
+            <p>{error}</p>
+            <p className="mt-2 text-sm">Using cached or mock data instead.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {isLoading ? (
+          renderSkeletons()
+        ) : filteredCryptos.length > 0 ? (
+          filteredCryptos.map(crypto => (
+            <div key={crypto.id} className="col-span-1">
+              <CryptoPriceCard cryptoId={crypto.id} />
+            </div>
+          ))
+        ) : (
+          <Card className="col-span-full">
+            <CardContent className="p-8 text-center">
+              <p className="mb-2 text-lg font-semibold">No cryptocurrencies found</p>
+              <p className="text-muted-foreground">
+                Try adjusting your search query or wait for data to load.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

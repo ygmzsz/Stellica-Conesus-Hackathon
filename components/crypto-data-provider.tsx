@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { fetchCryptoPrices, type CryptoPrice } from "@/lib/crypto-api"
+import { fetchCryptoPricesRobust, type CryptoPrice } from "@/lib/crypto-api"
 
 interface CryptoDataContextType {
   prices: CryptoPrice[]
@@ -78,7 +78,7 @@ export function CryptoDataProvider({ children, refreshInterval = 30000 }: Crypto
       console.error("CryptoDataProvider: Error fetching crypto data:", err)
       setError(`Failed to fetch cryptocurrency data: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

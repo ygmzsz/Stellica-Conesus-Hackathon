@@ -9,13 +9,13 @@ import { RealTimePrice } from "@/components/real-time-price"
 import Link from "next/link"
 
 export default async function Dashboard() {
-  // Check if user is authenticated
-  //const supabase = createServerComponentClient({ cookies })
-  const cookieStore = await cookies()
-  const token = cookieStore.get('sb-zvecpbopzlvvrweipheh-auth-token');
+  // Properly get cookies
+  const cookieStore = cookies()
+  
+  // Create Supabase client with the cookie store
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
-  const supabase = createServerComponentClient({ cookies });
-
+  // Get session
   const {
     data: { session },
   } = await supabase.auth.getSession()

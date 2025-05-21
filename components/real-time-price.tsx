@@ -12,7 +12,6 @@ interface RealTimePriceProps {
 
 export function RealTimePrice({ cryptoId, showChange = true, className = "" }: RealTimePriceProps) {
   const { prices, isLoading, error } = useCryptoData()
-  const { prices, isLoading, error } = useCryptoData()
   const [priceData, setPriceData] = useState<{
     price: number
     change: number
@@ -39,7 +38,7 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
         setPriceData(newPriceData)
       }
     }
-  }, [prices, isLoading, cryptoId])
+  }, [prices, isLoading, cryptoId, priceData])
 
   if (error) {
     return (
@@ -53,24 +52,6 @@ export function RealTimePrice({ cryptoId, showChange = true, className = "" }: R
   if (isLoading || !priceData) {
     return <div className={`animate-pulse ${className}`}>Loading...</div>
   }
-  
-  if (error) {
-    return <div className={`text-red-500 ${className}`}>Price unavailable</div>;
-  }
-
-  if (!priceData) {
-    return <div className={className}>Price unavailable</div>;
-  }
-
-  // Make sure the price is a valid number before formatting
-  const formattedPrice = typeof priceData.price === 'number' ? 
-    priceData.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 
-    "0.00";
-
-  // Make sure the change is a valid number before formatting
-  const formattedChange = typeof priceData.change === 'number' ? 
-    Math.abs(priceData.change).toFixed(2) : 
-    "0.00";
 
   // Make sure the price is a valid number before formatting
   const formattedPrice = typeof priceData.price === 'number' ? 

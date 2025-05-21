@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { fetchCryptoPricesRobust, type CryptoPrice } from "@/lib/crypto-api"
+import { fetchCryptoPricesWithFallback, type CryptoPrice } from "@/lib/crypto-api"
 
 interface CryptoDataContextType {
   prices: CryptoPrice[]
@@ -43,7 +43,7 @@ export function CryptoDataProvider({ children, refreshInterval = 30000 }: Crypto
     try {
       setError(null)
       console.log('CryptoDataProvider: Fetching crypto data...')
-      const data = await fetchCryptoPrices()
+      const data = await fetchCryptoPricesWithFallback()
       
       // Validate the data before updating state
       if (Array.isArray(data) && data.length > 0) {

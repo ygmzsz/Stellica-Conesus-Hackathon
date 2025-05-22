@@ -5,6 +5,8 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SiteHeader } from "@/components/site-header"
 import { CryptoDataProvider } from "@/components/crypto-data-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/lib/auth"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,12 +29,15 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem={false}
         >
-          <CryptoDataProvider>
-            <div className="relative flex min-h-screen flex-col bg-[#121212] text-white">
-              <SiteHeader />
-              <div className="flex-1">{children}</div>
-            </div>
-          </CryptoDataProvider>
+          <AuthProvider>
+            <CryptoDataProvider>
+              <div className="relative flex min-h-screen flex-col bg-[#121212] text-white">
+                <SiteHeader />
+                <div className="flex-1">{children}</div>
+              </div>
+              <Toaster />
+            </CryptoDataProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

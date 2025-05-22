@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -16,12 +15,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { TwoFactorSetup } from "@/components/two-factor-setup"
 import { BiometricAuth } from "@/components/biometric-auth"
 import { GoogleLogin } from "@/components/google-login"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "@/lib/auth"
 import { BiometricQRModal } from "@/components/biometric-qr-modal"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
   const { login, loginWithGoogle, loginWithDiscord, setupBiometric, verifyBiometric } = useAuth()
+  const { toast } = useToast()
+  
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showTwoFactor, setShowTwoFactor] = useState(false)
@@ -31,51 +33,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   setIsLoading(true)
-
-  //   try {
-  //     const { error } = await login(email, password)
-  //     if (error) throw error
-
-  //     // In a real app, the server would tell us if 2FA is required
-  //     // For demo purposes, we'll just show it
-  //     setShowTwoFactor(true)
-  //   } catch (error) {
-  //     console.error("Login error:", error)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Login started")
     setIsLoading(true)
     setErrorMessage("")
 
-    const supabase = getSupabaseBrowserClient()
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { error } = await login(email, password)
+      
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      setErrorMessage(error.message)
-      console.log(error.message)
+      // Show success toast
+      toast({
+        title: "Login successful",
+        description: "Welcome back to Stellica!",
+      })
+      
+      // Redirect to dashboard
+      router.push("/dashboard")
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to login")
+      console.error("Login error:", error)
+    } finally {
       setIsLoading(false)
-      return
     }
-
-    // On success, redirect or update UI
-    router.push("/dashboard")
-    setIsLoading(false)
   }
-
 
   const handleTwoFactorVerified = () => {
     router.push("/dashboard")
@@ -115,6 +99,11 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Biometric setup error:", error)
     }
+  }
+
+  const handleBiometricAuth = () => {
+    // This function will be called when biometric auth is successful
+    router.push("/dashboard")
   }
 
   const handleBiometricVerified = async (token: string) => {
@@ -195,6 +184,11 @@ export default function LoginPage() {
               </CardHeader>
               <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
+                  {errorMessage && (
+                    <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                      {errorMessage}
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -249,18 +243,20 @@ export default function LoginPage() {
                     </label>
                   </div>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
+                <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
-                  <div className="text-center text-sm">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/register" className="text-primary hover:underline">
-                      Sign up
-                    </Link>
-                  </div>
                 </CardFooter>
               </form>
+              <CardFooter className="border-t px-6 py-4">
+                <div className="text-center text-sm">
+                  Don't have an account?{" "}
+                  <Link href="/register" className="text-primary hover:underline">
+                    Create one
+                  </Link>
+                </div>
+              </CardFooter>
             </Card>
           </TabsContent>
 
@@ -268,19 +264,19 @@ export default function LoginPage() {
             <Card>
               <CardHeader className="space-y-1">
                 <CardTitle className="text-xl">Biometric Authentication</CardTitle>
-                <CardDescription>Use your fingerprint or face ID to sign in</CardDescription>
+                <CardDescription>Use fingerprint or face recognition to sign in</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center space-y-4 py-8">
-                <BiometricAuth onAuthenticated={() => router.push("/dashboard")} />
-                <Button onClick={handleBiometricSetup} variant="outline" className="mt-4">
-                  Set Up Biometric Auth
-                </Button>
+                <BiometricAuth onAuthenticated={handleBiometricAuth} />
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
+                <Button variant="outline" className="w-full" onClick={handleBiometricSetup}>
+                  Set up biometric authentication
+                </Button>
                 <div className="text-center text-sm">
-                  Don&apos;t have an account?{" "}
+                  Don't have an account?{" "}
                   <Link href="/register" className="text-primary hover:underline">
-                    Sign up
+                    Create one
                   </Link>
                 </div>
               </CardFooter>
@@ -289,13 +285,14 @@ export default function LoginPage() {
         </Tabs>
       </div>
 
-      {/* Biometric QR Code Modal */}
-      <BiometricQRModal
-        isOpen={showBiometricQR}
-        onClose={() => setShowBiometricQR(false)}
-        qrCodeUrl={qrCodeUrl}
-        onVerified={handleBiometricVerified}
-      />
+      {showBiometricQR && (
+        <BiometricQRModal 
+          isOpen={showBiometricQR}
+          onClose={() => setShowBiometricQR(false)}
+          qrCodeUrl={qrCodeUrl}
+          onVerified={handleBiometricVerified}
+        />
+      )}
     </div>
   )
 }

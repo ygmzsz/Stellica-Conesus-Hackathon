@@ -13,6 +13,7 @@ const publicRoutes = [
   "/about",
   "/features",
   "/auth/callback",
+  "/auth/discord-callback",
 ]
 
 // List of auth routes that should redirect to dashboard if already authenticated
@@ -21,9 +22,14 @@ const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"
 export async function middleware(req: NextRequest) {
   try {
     const res = NextResponse.next()
+
+    // Create a Supabase client configured to use cookies
     const supabase = createMiddlewareClient({ req, res })
 
-    // IMPORTANT: Make sure to await the auth.getSession call
+    // Refresh session if expired - required for Server Components
+    await supabase.auth.getSession()
+
+    // Get session data
     const {
       data: { session },
     } = await supabase.auth.getSession()

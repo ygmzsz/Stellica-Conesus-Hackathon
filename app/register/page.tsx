@@ -13,16 +13,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TwoFactorSetup } from "@/components/two-factor-setup"
+import { useAuth } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { register } = useAuth()
+  const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     const name = (document.getElementById("name") as HTMLInputElement).value
     const email = (document.getElementById("email") as HTMLInputElement).value
@@ -30,40 +36,43 @@ export default function RegisterPage() {
     const confirmPassword = (document.getElementById("confirmPassword") as HTMLInputElement).value
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match")
+      setError("Passwords do not match")
       setIsLoading(false)
       return
     }
 
-    const supabase = getSupabaseBrowserClient()
+    try {
+      // Use the auth context register method
+      const { error: registerError } = await register(email, password, name)
+      
+      if (registerError) {
+        throw registerError
+      }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          fullName: name,
-        },
-      },
-    })
-
-    if (error) {
-      alert(error.message)
+      // Registration successful
+      toast({
+        title: "Account created",
+        description: "Your account has been successfully created.",
+      })
+      
+      // Decide whether to show 2FA setup or redirect to dashboard
+      const setupTwoFactor = false; // You can make this configurable
+      
+      if (setupTwoFactor) {
+        setShowTwoFactorSetup(true)
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create account")
+      console.error("Registration error:", err)
+    } finally {
       setIsLoading(false)
-      return
     }
-
-    setShowTwoFactorSetup(true)
-    setIsLoading(false)
-    // // Simulate registration process
-    // setTimeout(() => {
-    //   setIsLoading(false)
-    //   setShowTwoFactorSetup(true)
-    // }, 1500)
   }
 
   const handleTwoFactorSetupComplete = () => {
-    router.push("/")
+    router.push("/dashboard")
   }
 
   if (showTwoFactorSetup) {
@@ -92,6 +101,11 @@ export default function RegisterPage() {
               <CardDescription>Fill in the form below to create your account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">

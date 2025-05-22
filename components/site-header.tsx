@@ -59,7 +59,7 @@ export function SiteHeader() {
                 <>
                   <DropdownMenuLabel className="font-normal">My Account</DropdownMenuLabel>
                   <DropdownMenuItem asChild className="focus:bg-gray-800">
-                    <Link href="/profile">Profile</Link>
+                    <Link href="/account">Account Details</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="focus:bg-gray-800">
                     <Link href="/wallet">Wallet</Link>

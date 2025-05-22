@@ -26,7 +26,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   register: (email: string, password: string, name: string) => Promise<{ error: Error | null }>
   updateProfile: (data: Partial<User>) => Promise<{ error: Error | null }>
-  linkDiscord: (discordId: string, discordUsername: string) => Promise<{ error: Error | null }>
+  linkDiscord: (discordId?: string, discordUsername?: string) => Promise<{ error: Error | null }>
   setupBiometric: () => Promise<{ qrCode: string; error: Error | null }>
   verifyBiometric: (token: string) => Promise<{ error: Error | null }>
 }
@@ -262,27 +262,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  const linkDiscord = async (discordId: string, discordUsername: string) => {
+  const linkDiscord = async (discordId?: string, discordUsername?: string) => {
     if (!user) return { error: new Error("Not authenticated") }
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          discord_id: discordId,
-          discord_username: discordUsername,
-          updated_at: new Date().toISOString(),
+      // If specific Discord ID and username are provided, use them
+      if (discordId && discordUsername) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            discord_id: discordId,
+            discord_username: discordUsername,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id)
+
+        if (error) throw error
+
+        // Update local user state
+        setUser({
+          ...user,
+          discordId,
+          discordUsername,
         })
-        .eq("id", user.id)
+
+        return { error: null }
+      } 
+      
+      // Otherwise, initiate OAuth flow
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: {
+          redirectTo: `${window.location.origin}/auth/discord-callback?link=true`,
+          scopes: "identify",
+        },
+      })
 
       if (error) throw error
-
-      // Update local user state
-      setUser({
-        ...user,
-        discordId,
-        discordUsername,
-      })
 
       return { error: null }
     } catch (error) {
